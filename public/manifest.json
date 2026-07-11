@@ -1,0 +1,10 @@
+{
+  "name": "EasyClock - Employee Clock In/Out",
+  "short_name": "EasyClock",
+  "description": "Secure on-chain clock in/out. Your private key stays on your phone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": []
+}

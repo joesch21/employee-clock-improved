@@ -1,0 +1,74 @@
+{
+  "project": {
+    "name": "employee-clock-improved",
+    "version": "2.1.0",
+    "description": "EasyClock - Simple, secure, on-chain employee clock in/out app using local wallets and geofenced smart contract on opBNB testnet.",
+    "last_updated": "2026-07-11",
+    "tech_stack": {
+      "frontend": "React 18 + Vite + Tailwind CSS",
+      "web3": "viem + local private key (stored in localStorage)",
+      "blockchain": "opBNB Testnet (Chain ID 5611)",
+      "contract": "0x4654675c8C068aC49047e9E607C34BE2492c945e"
+    }
+  },
+  "key_directories": {
+    "src/components": "UI components (CheckInCard is the core)",
+    "src/pages": "Route pages (Dashboard, Login, Roster, Timesheet, Swaps)",
+    "src/web3": "Blockchain interaction layer (write.js is most important)",
+    "src/lib": "Auth context and toast system",
+    "docs": "Project documentation and state snapshots",
+    "public": "Static assets and PWA manifest"
+  },
+  "core_files": [
+    {
+      "path": "src/components/CheckInCard.jsx",
+      "description": "Main component. Handles wallet creation, geolocation, clock in/out, QR code, and site config loading.",
+      "status": "Stable",
+      "last_major_change": "Refactored error handling and geofence messaging"
+    },
+    {
+      "path": "src/web3/write.js",
+      "description": "Contains all viem logic: contract calls, ABI, getSiteConfig(), clockInOut(), balance checks.",
+      "status": "Stable"
+    },
+    {
+      "path": "src/lib/auth.jsx",
+      "description": "Simple auth context with local wallet persistence.",
+      "status": "Stable"
+    },
+    {
+      "path": "src/pages/Dashboard.jsx",
+      "description": "Main landing page that renders CheckInCard.",
+      "status": "Stable"
+    }
+  ],
+  "smart_contract": {
+    "address": "0x4654675c8C068aC49047e9E607C34BE2492c945e",
+    "network": "opBNB Testnet",
+    "key_features": [
+      "Fixed geofence (500m radius)",
+      "SITE_LAT: -33932101 (-33.932101)",
+      "SITE_LNG: 151165226 (151.165226)",
+      "GEOFENCE_RADIUS_METERS: 500",
+      "No overtime tracking on-chain",
+      "No built-in cooldown (handled in app if needed)"
+    ]
+  },
+  "current_state": {
+    "wallet": "Local wallet stored in localStorage under key 'ec_pk'. Never exposed to user.",
+    "geofence": "Fully enforced on-chain. Frontend shows improved error messages.",
+    "clock_logic": "Must clock out before clocking in again. No time-based cooldown implemented yet.",
+    "known_issues": [
+      "Nested folder problems when unzipping (user experience issue)",
+      "Some deprecated dependencies from base template",
+      "No shift cooldown enforcement in frontend yet"
+    ],
+    "recommended_workflow": "Use patch files instead of full zips. See docs/operator_workflow.md"
+  },
+  "recommended_next_steps": [
+    "Add distance-to-site indicator in CheckInCard",
+    "Implement optional 9-hour cooldown in the app layer",
+    "Improve PWA install experience",
+    "Create manager dashboard for approving/funding wallets"
+  ]
+}
