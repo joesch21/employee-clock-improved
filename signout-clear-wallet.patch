@@ -1,0 +1,11 @@
+--- a/src/lib/auth.jsx
++++ b/src/lib/auth.jsx
+@@ -12,8 +12,8 @@ export function AuthProvider({ children }) {
+   const signOut = () => {
+     setUser(null);
+     setWeb3(null);
+-    // Do not clear ec_pk so wallet persists across logins
++    localStorage.removeItem('ec_pk'); // Fully sign out + delete wallet
+   };
+ 
+   const setLocalWeb3 = (data) => setWeb3(data);

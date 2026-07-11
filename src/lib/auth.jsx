@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -6,35 +6,52 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [web3, setWeb3] = useState(null); // { type: 'local' | 'image', address, account }
 
-  useEffect(() => {
-    // Auto-restore local wallet session
-    const savedPk = localStorage.getItem('ec_pk');
-    if (savedPk && !web3) {
-      // We don't create account here to avoid import cycle; CheckInCard handles it
-    }
-  }, []);
-
+  /**
+   * Sign in with user data (email or wallet address)
+   */
   const signIn = async (userData) => {
     setUser(userData);
   };
 
+  /**
+   * Sign out the current session.
+   * 
+   * IMPORTANT: We deliberately do NOT delete the wallet from localStorage.
+   * The wallet (ec_pk) should persist so the user can sign back in later
+   * without having to create a new wallet.
+   */
   const signOut = () => {
     setUser(null);
     setWeb3(null);
-    // Do not clear ec_pk so wallet persists across logins
+    // Do NOT remove 'ec_pk' — wallet should persist across sessions
   };
 
-  const setLocalWeb3 = (data) => setWeb3(data);
+  /**
+   * Set the Web3 wallet/account (used by CheckInCard after creating or loading a wallet)
+   */
+  const setLocalWeb3 = (data) => {
+    setWeb3(data);
+  };
+
+  const value = {
+    user,
+    web3,
+    signIn,
+    signOut,
+    setWeb3: setLocalWeb3,
+  };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut, web3, setWeb3: setLocalWeb3 }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be inside AuthProvider');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

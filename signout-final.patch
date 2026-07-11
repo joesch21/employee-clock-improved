@@ -1,0 +1,12 @@
+--- a/src/lib/auth.jsx
++++ b/src/lib/auth.jsx
+@@ -12,8 +12,9 @@ export function AuthProvider({ children }) {
+   const signOut = () => {
+     setUser(null);
+     setWeb3(null);
+-    localStorage.removeItem('ec_pk'); // Fully sign out + delete wallet
++    localStorage.removeItem('ec_pk');
++    window.location.reload(); // Full logout + clean React state
+   };
+ 
+   const setLocalWeb3 = (data) => setWeb3(data);

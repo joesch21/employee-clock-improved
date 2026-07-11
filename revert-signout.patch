@@ -1,0 +1,12 @@
+--- a/src/lib/auth.jsx
++++ b/src/lib/auth.jsx
+@@ -12,9 +12,8 @@ export function AuthProvider({ children }) {
+   const signOut = () => {
+     setUser(null);
+     setWeb3(null);
+-    localStorage.removeItem('ec_pk');
+-    window.location.reload();
++    // Wallet stays in localStorage. Only clear session.
+   };
+ 
+   const setLocalWeb3 = (data) => setWeb3(data);
