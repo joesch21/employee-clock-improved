@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clock, Copy, QrCode, RefreshCw, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { makeLocalAccount } from '../web3/write';
 import {
   clockInOut,
@@ -11,8 +12,6 @@ import {
 } from '../web3/write';
 import { useToast } from '../lib/toast';
 import { format } from 'date-fns';
-
-const SCALE = 1_000_000;
 
 export default function CheckInCard() {
   const [account, setAccount] = useState(null);
@@ -25,12 +24,12 @@ export default function CheckInCard() {
   const [showQR, setShowQR] = useState(false);
   const [msg, setMsg] = useState('');
   const [siteConfig, setSiteConfig] = useState(null);
+
   const toast = useToast();
 
-  // ==================== WALLET LOADING ====================
+  // ==================== LOAD WALLET ON MOUNT ====================
   useEffect(() => {
     const savedPk = localStorage.getItem('ec_pk');
-
     if (savedPk) {
       try {
         const acc = makeLocalAccount(savedPk);
@@ -77,11 +76,10 @@ export default function CheckInCard() {
     const pk = '0x' + Array.from(entropy).map(b => b.toString(16).padStart(2, '0')).join('');
 
     localStorage.setItem('ec_pk', pk);
-
     const acc = makeLocalAccount(pk);
+
     setAccount(acc);
     setAddress(acc.address);
-
     setMsg('Wallet created securely on this device.');
     toast.show('Work wallet ready! Share your address with your manager.', 'success');
 
@@ -182,7 +180,7 @@ export default function CheckInCard() {
 
   // ==================== RENDER ====================
 
-  // No wallet yet → Show creation screen
+  // === No wallet yet ===
   if (!address) {
     return (
       <div className="max-w-md mx-auto">
@@ -201,13 +199,22 @@ export default function CheckInCard() {
           >
             Create My Work Wallet
           </button>
+
           <p className="mt-6 text-xs text-zinc-500">One tap. No seed phrase shown. Manager will fund gas.</p>
+
+          {/* Link to instructions */}
+          <Link 
+            to="/about" 
+            className="mt-4 inline-block text-sm text-emerald-600 hover:text-emerald-700 hover:underline"
+          >
+            How does EasyClock work? →
+          </Link>
         </div>
       </div>
     );
   }
 
-  // Main clock interface
+  // === Main Clock Interface ===
   return (
     <div className="max-w-[520px] mx-auto">
       {/* Wallet Header */}
@@ -240,7 +247,7 @@ export default function CheckInCard() {
         </button>
       </div>
 
-      {/* Main Action Button */}
+      {/* Main Clock Button */}
       <div className="mb-6">
         {!isClockedIn ? (
           <button

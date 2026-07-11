@@ -3,7 +3,7 @@
     "name": "employee-clock-improved",
     "version": "2.1.0",
     "description": "EasyClock - Simple, secure, on-chain employee clock in/out app using local wallets and geofenced smart contract on opBNB testnet.",
-    "last_updated": "2026-07-11",
+    "last_updated": "2026-07-12",
     "tech_stack": {
       "frontend": "React 18 + Vite + Tailwind CSS",
       "web3": "viem + local private key (stored in localStorage)",
@@ -13,7 +13,7 @@
   },
   "key_directories": {
     "src/components": "UI components (CheckInCard is the core)",
-    "src/pages": "Route pages (Dashboard, Login, Roster, Timesheet, Swaps)",
+    "src/pages": "Route pages (Dashboard, Login, Roster, Timesheet, Swaps, About)",
     "src/web3": "Blockchain interaction layer (write.js is most important)",
     "src/lib": "Auth context and toast system",
     "docs": "Project documentation and state snapshots",
@@ -40,6 +40,12 @@
       "path": "src/pages/Dashboard.jsx",
       "description": "Main landing page that renders CheckInCard.",
       "status": "Stable"
+    },
+    {
+      "path": "src/pages/About.jsx",
+      "description": "Employee guide page with README essentials: wallet creation, clock in/out steps, geofence rules, security, troubleshooting, and contract details.",
+      "status": "New",
+      "last_major_change": "Added in-app About & Instructions page for daily clocking"
     }
   ],
   "smart_contract": {
@@ -69,6 +75,7 @@
     "Add distance-to-site indicator in CheckInCard",
     "Implement optional 9-hour cooldown in the app layer",
     "Improve PWA install experience",
-    "Create manager dashboard for approving/funding wallets"
+    "Create manager dashboard for approving/funding wallets",
+    "DONE: Added in-app About & Instructions page with clocking essentials and README-style guide"
   ]
 }

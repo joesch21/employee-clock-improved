@@ -11,6 +11,7 @@ import {
 } from '../web3/write';
 import { useToast } from '../lib/toast';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 const SCALE = 1_000_000;
 
@@ -190,6 +191,14 @@ export default function CheckInCard() {
             Create My Work Wallet
           </button>
           <p className="mt-6 text-xs text-zinc-500">One tap. No seed phrase shown. Manager will fund gas.</p>
+
+          {/* NEW: Link to About / Instructions page */}
+          <Link 
+            to="/about" 
+            className="mt-4 inline-block text-sm text-emerald-600 hover:text-emerald-700 hover:underline"
+          >
+            How does EasyClock work? →
+          </Link>
         </div>
       </div>
     );

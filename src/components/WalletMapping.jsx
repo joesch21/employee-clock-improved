@@ -6,80 +6,96 @@ import { useAppContext } from '../App';
 
 function WalletMapping() {
   const { mappings, updateMappings, showNotification } = useAppContext();
-  
+
+  // Form states
   const [walletInput, setWalletInput] = useState("");
   const [nameInput, setNameInput] = useState("");
-  const [isEditing, setIsEditing] = useState(null);
-  const [editWallet, setEditWallet] = useState("");
-  const [editName, setEditName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Edit state
+  const [editingWallet, setEditingWallet] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editWallet, setEditWallet] = useState("");
+
+  // Modal
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const filteredMappings = mappings.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  // Filtered list
+  const filteredMappings = mappings.filter(m =>
+    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.wallet.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ==================== ADD MAPPING ====================
   const handleAddMapping = (e) => {
     e.preventDefault();
+
     if (!walletInput.trim() || !nameInput.trim()) {
       showNotification("Both wallet address and employee name are required!", "warning");
       return;
     }
-    
-    // Check for duplicate wallet
-    if (mappings.some(m => m.wallet.toLowerCase() === walletInput.trim().toLowerCase())) {
+
+    const wallet = walletInput.trim().toLowerCase();
+
+    if (mappings.some(m => m.wallet.toLowerCase() === wallet)) {
       showNotification("This wallet address is already mapped!", "warning");
       return;
     }
 
-    const newMapping = { 
-      wallet: walletInput.trim(), 
-      name: nameInput.trim() 
+    const newMapping = {
+      wallet: walletInput.trim(),
+      name: nameInput.trim()
     };
-    
-    const updated = [...mappings, newMapping];
-    updateMappings(updated);
+
+    updateMappings([...mappings, newMapping]);
     showNotification(`Added mapping for ${nameInput.trim()}`, "success");
-    
+
+    // Reset form
     setWalletInput("");
     setNameInput("");
     setShowAddModal(false);
   };
 
-  const startEdit = (index) => {
-    const mapping = mappings[index];
-    setIsEditing(index);
+  // ==================== EDIT MAPPING ====================
+  const startEdit = (mapping) => {
+    setEditingWallet(mapping.wallet);
     setEditWallet(mapping.wallet);
     setEditName(mapping.name);
   };
 
-  const saveEdit = (index) => {
+  const saveEdit = () => {
     if (!editName.trim() || !editWallet.trim()) {
       showNotification("Name and wallet cannot be empty", "warning");
       return;
     }
 
-    const updated = [...mappings];
-    updated[index] = { wallet: editWallet.trim(), name: editName.trim() };
+    const updated = mappings.map(m =>
+      m.wallet === editingWallet
+        ? { wallet: editWallet.trim(), name: editName.trim() }
+        : m
+    );
+
     updateMappings(updated);
-    setIsEditing(null);
     showNotification("Mapping updated successfully", "success");
+    cancelEdit();
   };
 
   const cancelEdit = () => {
-    setIsEditing(null);
+    setEditingWallet(null);
     setEditWallet("");
     setEditName("");
   };
 
-  const deleteMapping = (index) => {
+  // ==================== DELETE MAPPING ====================
+  const deleteMapping = (wallet) => {
     if (!confirm("Delete this employee mapping?")) return;
-    const updated = mappings.filter((_, i) => i !== index);
+
+    const updated = mappings.filter(m => m.wallet !== wallet);
     updateMappings(updated);
     showNotification("Mapping deleted", "success");
   };
 
+  // ==================== CSV IMPORT ====================
   const handleCSVUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -100,14 +116,12 @@ function WalletMapping() {
           return;
         }
 
-        // Merge strategy: replace duplicates by wallet, add new
-        const walletSet = new Set(mappings.map(m => m.wallet.toLowerCase()));
+        // Merge: update existing, add new
         const merged = [...mappings];
-        
         uploaded.forEach(u => {
           const existingIdx = merged.findIndex(m => m.wallet.toLowerCase() === u.wallet.toLowerCase());
           if (existingIdx !== -1) {
-            merged[existingIdx] = u; // update name
+            merged[existingIdx] = u;
           } else {
             merged.push(u);
           }
@@ -115,7 +129,7 @@ function WalletMapping() {
 
         updateMappings(merged);
         showNotification(`Imported ${uploaded.length} mappings successfully!`, "success");
-        e.target.value = ''; // reset input
+        e.target.value = '';
       },
       error: () => {
         showNotification("Failed to parse CSV file", "warning");
@@ -123,32 +137,41 @@ function WalletMapping() {
     });
   };
 
+  // ==================== CSV EXPORT ====================
   const handleDownloadCSV = () => {
     if (mappings.length === 0) {
       showNotification("No mappings to export", "warning");
       return;
     }
+
     const csv = Papa.unparse(mappings);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    saveAs(blob, `employee_wallet_mappings_${new Date().toISOString().slice(0,10)}.csv`);
+    saveAs(blob, `employee_wallet_mappings_${new Date().toISOString().slice(0, 10)}.csv`);
     showNotification(`Exported ${mappings.length} mappings`, "success");
   };
 
+  // ==================== RENDER ====================
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Employee Wallet Mappings</h1>
-          <p className="text-gray-500 mt-1">Link blockchain wallet addresses to real employee names for readable reports.</p>
+          <p className="text-gray-500 mt-1">
+            Link blockchain wallet addresses to real employee names for readable reports.
+          </p>
         </div>
+
         <div className="flex items-center gap-3">
           <label className="btn btn-secondary cursor-pointer text-sm">
             <Upload className="w-4 h-4" /> Import CSV
             <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
           </label>
+
           <button onClick={handleDownloadCSV} className="btn btn-secondary text-sm">
             <Download className="w-4 h-4" /> Export CSV
           </button>
+
           <button onClick={() => setShowAddModal(true)} className="btn btn-primary text-sm">
             <Plus className="w-4 h-4" /> Add Employee
           </button>
@@ -184,53 +207,54 @@ function WalletMapping() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filteredMappings.length > 0 ? (
-              filteredMappings.map((mapping, index) => {
-                const originalIndex = mappings.findIndex(m => m.wallet === mapping.wallet);
-                const isCurrentlyEditing = isEditing === originalIndex;
+              filteredMappings.map((mapping) => {
+                const isEditing = editingWallet === mapping.wallet;
 
                 return (
-                  <tr key={originalIndex} className="log-row">
+                  <tr key={mapping.wallet} className="log-row">
                     <td className="px-6 py-4">
-                      {isCurrentlyEditing ? (
-                        <input 
-                          type="text" 
-                          value={editName} 
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="input py-1.5 text-sm" 
+                          className="input py-1.5 text-sm"
                         />
                       ) : (
                         <span className="font-medium text-gray-900">{mapping.name}</span>
                       )}
                     </td>
+
                     <td className="px-6 py-4 font-mono text-sm text-gray-600 break-all">
-                      {isCurrentlyEditing ? (
-                        <input 
-                          type="text" 
-                          value={editWallet} 
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editWallet}
                           onChange={(e) => setEditWallet(e.target.value)}
-                          className="input py-1.5 text-sm font-mono" 
+                          className="input py-1.5 text-sm font-mono"
                         />
                       ) : (
                         mapping.wallet
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-right">
-                      {isCurrentlyEditing ? (
+                      {isEditing ? (
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => saveEdit(originalIndex)} className="btn btn-success text-xs px-4 py-1.5">Save</button>
+                          <button onClick={saveEdit} className="btn btn-success text-xs px-4 py-1.5">Save</button>
                           <button onClick={cancelEdit} className="btn btn-secondary text-xs px-4 py-1.5">Cancel</button>
                         </div>
                       ) : (
                         <div className="flex justify-end gap-1.5">
-                          <button 
-                            onClick={() => startEdit(originalIndex)} 
+                          <button
+                            onClick={() => startEdit(mapping)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => deleteMapping(originalIndex)} 
+                          <button
+                            onClick={() => deleteMapping(mapping.wallet)}
                             className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition"
                             title="Delete"
                           >
@@ -245,7 +269,9 @@ function WalletMapping() {
             ) : (
               <tr>
                 <td colSpan={3} className="px-6 py-12 text-center text-gray-400">
-                  {searchTerm ? "No matches found for your search." : "No employee mappings yet. Add your first one above."}
+                  {searchTerm 
+                    ? "No matches found for your search." 
+                    : "No employee mappings yet. Add your first one above."}
                 </td>
               </tr>
             )}
@@ -257,15 +283,17 @@ function WalletMapping() {
         Mappings are saved in your browser's local storage. Import a CSV with columns: <span className="font-mono">wallet,name</span>
       </div>
 
-      {/* Add Modal */}
+      {/* Add Employee Modal */}
       {showAddModal && (
         <div className="modal" onClick={() => setShowAddModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-semibold">Add New Employee Mapping</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><X /></button>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X />
+              </button>
             </div>
-            
+
             <form onSubmit={handleAddMapping} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1.5">Employee Full Name</label>
@@ -278,6 +306,7 @@ function WalletMapping() {
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1.5">Wallet Address (0x...)</label>
                 <input
@@ -291,8 +320,12 @@ function WalletMapping() {
               </div>
 
               <div className="flex gap-3 pt-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary flex-1">Cancel</button>
-                <button type="submit" className="btn btn-primary flex-1">Add Mapping</button>
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn btn-secondary flex-1">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary flex-1">
+                  Add Mapping
+                </button>
               </div>
             </form>
           </div>
