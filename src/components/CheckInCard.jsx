@@ -15,6 +15,25 @@ import { Link } from 'react-router-dom';
 
 const SCALE = 1_000_000;
 
+// Derives an IN/OUT type for each clock record without trusting array
+// position (the old `idx % 2` guess broke depending on array length after
+// reversing — see thread history). Instead: getIsClockedIn(addr) is a real
+// contract read of current state, so the most recent record MUST match it.
+// The contract only allows clockIn when not clocked in and clockOut when
+// clocked in, so alternation going backward in time is safe once anchored
+// to that one verified state — no assumption about total record count.
+function tagRecordsWithType(recs, currentlyClockedIn) {
+  const sorted = [...recs].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+
+  let expectedIn = currentlyClockedIn;
+  const taggedNewestFirst = [];
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    taggedNewestFirst.push({ ...sorted[i], type: expectedIn ? 'IN' : 'OUT' });
+    expectedIn = !expectedIn;
+  }
+  return taggedNewestFirst;
+}
+
 export default function CheckInCard() {
   const [account, setAccount] = useState(null);
   const [address, setAddress] = useState('');
@@ -55,7 +74,7 @@ export default function CheckInCard() {
       ]);
       setIsClockedIn(clocked);
       setBalance((Number(bal) / 1e18).toFixed(4));
-      setRecords([...recs].reverse().slice(0, 6));
+      setRecords(tagRecordsWithType(recs, clocked).slice(0, 6));
     } catch (e) {
       console.error(e);
     }
@@ -298,8 +317,8 @@ export default function CheckInCard() {
                       {rec.latitude / 1e6}°, {rec.longitude / 1e6}°
                     </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${idx % 2 === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    {idx % 2 === 0 ? 'IN' : 'OUT'}
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${rec.type === 'IN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {rec.type}
                   </div>
                 </div>
               );
